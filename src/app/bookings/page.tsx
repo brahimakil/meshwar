@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { 
   Plus, 
   Search, 
-  Filter, 
   Calendar, 
   User, 
   CheckCircle, 
@@ -40,7 +39,7 @@ export default function BookingsPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   async function loadData() {
     try {

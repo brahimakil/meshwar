@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, MapPin, Tag, Users, Dumbbell, DollarSign, Edit, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Users, Dumbbell, DollarSign, Edit, Trash2, AlertCircle } from "lucide-react";
 import dynamic from "next/dynamic";
 import MainLayout from "@/layouts/MainLayout";
 import { activityService } from "@/services/activityService";
@@ -87,7 +87,7 @@ export default function ViewActivityPage() {
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-bold">Activity not found</h2>
           <p className="text-muted-foreground mt-2">
-            The activity you're looking for doesn't exist or has been removed.
+            The activity you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={() => router.push("/activities")}
@@ -133,7 +133,9 @@ export default function ViewActivityPage() {
                     ? "bg-yellow-100 text-yellow-800" 
                     : "bg-red-100 text-red-800"
               }`}>
-                {activity?.difficulty.charAt(0).toUpperCase() + activity?.difficulty.slice(1)}
+                {activity?.difficulty 
+                  ? activity.difficulty.charAt(0).toUpperCase() + activity.difficulty.slice(1)
+                  : "Unknown"}
               </span>
             </div>
           </div>
@@ -260,9 +262,9 @@ export default function ViewActivityPage() {
                   <div>
                     <p className="text-sm font-medium">Duration</p>
                     <p className="text-sm text-muted-foreground">
-                      {activity?.estimatedDuration} minutes
-                      {activity?.estimatedDuration >= 60 && (
-                        <span> ({Math.floor(activity.estimatedDuration / 60)} hours {activity.estimatedDuration % 60} minutes)</span>
+                      {activity?.estimatedDuration ?? 0} minutes
+                      {(activity?.estimatedDuration ?? 0) >= 60 && (
+                        <span> ({Math.floor((activity?.estimatedDuration ?? 0) / 60)} hours {(activity?.estimatedDuration ?? 0) % 60} minutes)</span>
                       )}
                     </p>
                   </div>

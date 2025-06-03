@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import { Icon, LatLngExpression } from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Location } from '@/types/location';
 
@@ -30,6 +30,11 @@ export default function DashboardMap({ locations }: DashboardMapProps) {
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.276987, 45.086601]); // Default to center of Saudi Arabia
   const [mapZoom, setMapZoom] = useState(6);
   
+  // Call fixLeafletIcons in useEffect
+  useEffect(() => {
+    fixLeafletIcons();
+  }, []);
+
   // Calculate map center and zoom based on locations
   useEffect(() => {
     if (locations.length === 0) return;

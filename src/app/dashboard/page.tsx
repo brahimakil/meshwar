@@ -25,6 +25,7 @@ import {
 } from "@/services/dashboardService";
 import { getAgeGroupLabel } from "@/utils/ageGroupUtils";
 import { locationService } from "@/services/locationService";
+import { Location as LocationType } from "@/types/location";
 
 // Dynamically import the DashboardMap to avoid SSR issues with Leaflet
 const DashboardMap = dynamic(
@@ -37,9 +38,9 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
   const [locationData, setLocationData] = useState<PieChartData[]>([]);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<LocationType[]>([]);
 
   useEffect(() => {
     async function fetchDashboardData() {

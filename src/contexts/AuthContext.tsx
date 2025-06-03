@@ -77,54 +77,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      setLoading(true);
+      
+      if (authUser) {
         try {
-          // Fetch the user data to check if they're an admin
-          const userDocRef = doc(db, "users", user.uid);
-          const userDoc = await getDoc(userDocRef);
+          // Get user document from Firestore
+          const userDoc = await getDoc(doc(db, "users", authUser.uid));
           
           if (userDoc.exists()) {
-            const data = userDoc.data();
+            const userData = userDoc.data();
             
-            // Only set the current user if they're an admin
-            if (data.role === "admin") {
-              setCurrentUser(user);
-              setUserData({ 
-                uid: user.uid, 
-                email: data.email,
-                displayName: data.displayName,
-                role: data.role,
-                createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date()
-              });
-            } else {
-              // Not an admin, sign them out
-              console.log("Non-admin user attempted to log in, signing out");
-              await signOut(auth);
-              setCurrentUser(null);
-              setUserData(null);
-            }
+            // Store user data including role in state
+            setUserData({
+              uid: authUser.uid,
+              email: authUser.email,
+              displayName: userData.displayName || authUser.displayName,
+              role: userData.role || "user", // Default to "user" if role is not specified
+              ...userData
+            });
+            
+            // Store role in localStorage for persistence
+            localStorage.setItem("userRole", userData.role || "user");
+            
+            // Set the current user
+            setCurrentUser(authUser);
           } else {
-            console.error("No user data found in Firestore");
-            await signOut(auth);
-            setCurrentUser(null);
-            setUserData(null);
+            // If user document doesn't exist in Firestore, create one
+            // But don't sign out the user
+            await setDoc(doc(db, "users", authUser.uid), {
+              email: authUser.email,
+              displayName: authUser.displayName,
+              role: "user", // Default role
+              createdAt: serverTimestamp()
+            });
+            
+            setUserData({
+              uid: authUser.uid,
+              email: authUser.email,
+              displayName: authUser.displayName,
+              role: "user"
+            });
+            
+            localStorage.setItem("userRole", "user");
+            setCurrentUser(authUser);
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
-          await signOut(auth);
-          setCurrentUser(null);
-          setUserData(null);
+          // Still set basic user info even if there's an error
+          // Don't sign out the user
+          setUserData({
+            uid: authUser.uid,
+            email: authUser.email,
+            displayName: authUser.displayName,
+            role: localStorage.getItem("userRole") || "user" // Use cached role or default
+          });
+          setCurrentUser(authUser);
         }
       } else {
-        setCurrentUser(null);
+        // User is signed out
         setUserData(null);
+        setCurrentUser(null);
+        localStorage.removeItem("userRole");
       }
       
       setLoading(false);
     });
-
-    return unsubscribe;
+    
+    return () => unsubscribe();
   }, []);
 
   // Signup function - always create admins in this admin interface
@@ -182,10 +202,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await signOut(auth);
           throw new Error("Access denied. Only administrators can log in to this system.");
         }
+        
+        // Set user data to prevent logout
+        setUserData({
+          uid: user.uid,
+          email: user.email,
+          displayName: data.displayName || user.displayName,
+          role: data.role,
+          createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date()
+        });
+        
+        // Set current user
+        setCurrentUser(user);
+        
+        // Store role in localStorage
+        localStorage.setItem("userRole", data.role);
+        
+        return user;
       } else {
-        // No user data found, sign them out
-        await signOut(auth);
-        throw new Error("User data not found. Please contact an administrator.");
+        // No user data found, create a new user document
+        const userData = {
+          email: user.email,
+          displayName: user.displayName,
+          role: "admin", // Default to admin for this admin interface
+          createdAt: serverTimestamp()
+        };
+        
+        await setDoc(userDocRef, userData);
+        
+        // Set user data
+        setUserData({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          role: "admin",
+          createdAt: new Date()
+        });
+        
+        // Set current user
+        setCurrentUser(user);
+        
+        // Store role in localStorage
+        localStorage.setItem("userRole", "admin");
+        
+        return user;
       }
     } catch (error: any) {
       console.error("Error during login:", error);

@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Save, ArrowLeft, Loader2, Plus, Minus, AlertCircle, MapPin, X } from "lucide-react";
+import { Save, ArrowLeft, Loader2, Plus, AlertCircle, X, MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
 import MainLayout from "@/layouts/MainLayout";
 import { activityService } from "@/services/activityService";
 import { locationService } from "@/services/locationService";
 import { Location } from "@/types/location";
 import { Activity } from "@/types/activity";
-import { isDateInPast } from "@/utils/dateUtils";
 
 // Dynamically import the ActivityMap to avoid SSR issues with Leaflet
 const ActivityMap = dynamic(
@@ -183,10 +182,9 @@ export default function EditActivityPage() {
         endTime,
         locations: selectedLocationIds,
         isActive,
-        isExpired: isDateInPast(endDate),
         difficulty,
         ageGroup,
-        estimatedDuration, // This is now automatically calculated
+        estimatedDuration,
         estimatedCost,
         tags,
         participantLimit
@@ -248,7 +246,7 @@ export default function EditActivityPage() {
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-bold">Activity not found</h2>
           <p className="text-muted-foreground mt-2">
-            The activity you're looking for doesn't exist or has been removed.
+            The activity you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={() => router.push("/activities")}

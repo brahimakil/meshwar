@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Loader2, Plus, Minus, AlertCircle, MapPin, X } from "lucide-react";
+import { Save, ArrowLeft, Loader2, Plus, X, MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
 import MainLayout from "@/layouts/MainLayout";
 import { activityService } from "@/services/activityService";
 import { locationService } from "@/services/locationService";
 import { Location } from "@/types/location";
-import { isDateInPast } from "@/utils/dateUtils";
 import { ageGroupOptions } from "@/utils/ageGroupUtils";
 
 // Dynamically import the ActivityMap to avoid SSR issues with Leaflet
@@ -135,7 +134,6 @@ export default function NewActivityPage() {
         endTime,
         locations: selectedLocationIds,
         isActive,
-        isExpired: isDateInPast(endDate),
         difficulty,
         ageGroup,
         estimatedDuration, // This is now automatically calculated

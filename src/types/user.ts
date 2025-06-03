@@ -6,6 +6,7 @@ export interface User {
   displayName: string;
   role: UserRole;
   dob: Date | any; // Date of birth
+  profileImage?: string; // Base64 encoded image
   createdAt: Date | any;
   updatedAt?: Date | any;
 } 

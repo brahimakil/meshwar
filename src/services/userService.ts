@@ -134,6 +134,11 @@ export const userService = {
       updateData.dob = Timestamp.fromDate(new Date(userData.dob));
     }
     
+    // Handle profile image update
+    if (userData.profileImage) {
+      updateData.profileImage = userData.profileImage;
+    }
+    
     await updateDoc(docRef, updateData);
   },
   

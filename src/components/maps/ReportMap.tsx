@@ -97,18 +97,12 @@ export default function ReportMap({ locations, activities }: ReportMapProps) {
     };
     
     let color = 'blue'; // Default color
-    let categoryName = '';
     
-    if (typeof location.category === 'string') {
-      categoryName = location.category.toLowerCase();
-    } else if (location.category && typeof location.category === 'object' && location.category.name) {
-      categoryName = typeof location.category.name === 'string' 
-        ? location.category.name.toLowerCase() 
-        : '';
-    }
-    
-    if (categoryName && categoryColors[categoryName]) {
-      color = categoryColors[categoryName];
+    if (location.category && typeof location.category === 'string') {
+      const lowerCaseCategory = location.category.toLowerCase();
+      if (categoryColors[lowerCaseCategory]) {
+        color = categoryColors[lowerCaseCategory];
+      }
     }
     
     return new Icon({
@@ -159,9 +153,7 @@ export default function ReportMap({ locations, activities }: ReportMapProps) {
               ) : location.category && typeof location.category === 'object' ? (
                 <p className="text-sm mt-1">
                   <span className="font-medium">Category:</span> {
-                    typeof location.category.name === 'string' 
-                      ? location.category.name 
-                      : "Unknown Category"
+                    location.category.name || "Unknown Category"
                   }
                 </p>
               ) : (

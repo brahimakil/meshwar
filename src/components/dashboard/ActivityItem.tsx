@@ -10,6 +10,7 @@ interface ActivityItemProps {
 }
 
 export default function ActivityItem({
+  id,
   type,
   title,
   description,
