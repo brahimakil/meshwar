@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Plus, 
   Search, 
@@ -35,50 +34,8 @@ export default function BookingsPage() {
     activityId: "",
     status: "confirmed" as "confirmed" | "pending" | "cancelled"
   });
-  const router = useRouter();
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  async function loadData() {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Load all activities, users, and bookings
-      const [activitiesData, usersData, bookingsData] = await Promise.all([
-        activityService.getActivities(),
-        userService.getUsers(),
-        bookingService.getBookings()
-      ]);
-      
-      // Filter out expired activities
-      const activeActivities = activitiesData.filter(
-        activity => !activity.isExpired && activity.isActive
-      );
-      
-      // Filter out admin users - only keep users with role "user"
-      const regularUsers = usersData.filter(user => user.role === "user");
-      
-      setActivities(activeActivities);
-      setUsers(regularUsers); // Set only regular users, not admins
-      setBookings(bookingsData);
-      
-      // If we have activities, select the first one by default
-      if (activeActivities.length > 0) {
-        setSelectedActivity(activeActivities[0].id);
-        loadBookingsForActivity(activeActivities[0].id);
-      }
-    } catch (err) {
-      console.error("Error loading data:", err);
-      setError("Failed to load data. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadBookingsForActivity(activityId: string) {
+  const loadBookingsForActivity = useCallback(async (activityId: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -90,28 +47,69 @@ export default function BookingsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [activitiesData, usersData, bookingsData] = await Promise.all([
+        activityService.getActivities(),
+        userService.getUsers(),
+        bookingService.getBookings()
+      ]);
+      
+      const activeActivities = activitiesData.filter(
+        activity => !activity.isExpired && activity.isActive
+      );
+      
+      const regularUsers = usersData.filter(user => user.role === "user");
+      
+      setActivities(activeActivities);
+      setUsers(regularUsers);
+      setBookings(bookingsData);
+      
+      if (activeActivities.length > 0) {
+        const currentSelectedActivityIsValid = activeActivities.some(act => act.id === selectedActivity);
+        if (selectedActivity && currentSelectedActivityIsValid) {
+            loadBookingsForActivity(selectedActivity);
+        } else if (activeActivities.length > 0) {
+            setSelectedActivity(activeActivities[0].id);
+            loadBookingsForActivity(activeActivities[0].id);
+        }
+      } else {
+        setBookings([]);
+      }
+    } catch (err) {
+      console.error("Error loading data:", err);
+      setError("Failed to load data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [loadBookingsForActivity, selectedActivity]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   async function handleCreateBooking() {
     try {
       setLoading(true);
       setError(null);
       
-      // Validate inputs
       if (!newBooking.userId || !newBooking.activityId) {
         setError("Please select both a user and an activity");
         setLoading(false);
         return;
       }
       
-      // Create the booking
       await bookingService.createBooking({
         userId: newBooking.userId,
         activityId: newBooking.activityId,
         status: newBooking.status
       });
       
-      // Reset form and close modal
       setNewBooking({
         userId: "",
         activityId: "",
@@ -119,11 +117,14 @@ export default function BookingsPage() {
       });
       setShowCreateModal(false);
       
-      // Reload bookings for the selected activity
-      await loadBookingsForActivity(selectedActivity);
-    } catch (err: any) {
+      await loadBookingsForActivity(newBooking.activityId);
+    } catch (err: unknown) {
       console.error("Error creating booking:", err);
-      setError(err.message || "Failed to create booking. Please try again.");
+      if (err instanceof Error) {
+        setError(err.message || "Failed to create booking. Please try again.");
+      } else {
+        setError("Failed to create booking. An unknown error occurred.");
+      }
     } finally {
       setLoading(false);
     }

@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, TooltipItem } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+interface PieChartDataItem {
+  label: string;
+  value: number;
+}
+
 interface PieChartProps {
-  data: Array<{ label: string; value: number }>;
+  data: PieChartDataItem[];
   height?: number;
 }
 
@@ -23,13 +28,21 @@ function stringToColor(str: string) {
 }
 
 export default function PieChart({ data, height = 300 }: PieChartProps) {
-  const [chartData, setChartData] = useState({
-    labels: [] as string[],
+  const [chartData, setChartData] = useState<{
+    labels: string[];
+    datasets: {
+      data: number[];
+      backgroundColor: string[];
+      borderColor: string[];
+      borderWidth: number;
+    }[];
+  }>({
+    labels: [],
     datasets: [
       {
-        data: [] as number[],
-        backgroundColor: [] as string[],
-        borderColor: [] as string[],
+        data: [],
+        backgroundColor: [],
+        borderColor: [],
         borderWidth: 1,
       },
     ],
@@ -39,10 +52,7 @@ export default function PieChart({ data, height = 300 }: PieChartProps) {
     if (data && data.length > 0) {
       const labels = data.map(item => item.label);
       const values = data.map(item => item.value);
-      const backgroundColors = data.map(item => {
-        const color = stringToColor(item.label);
-        return color;
-      });
+      const backgroundColors = data.map(item => stringToColor(item.label));
       
       setChartData({
         labels,
@@ -50,10 +60,15 @@ export default function PieChart({ data, height = 300 }: PieChartProps) {
           {
             data: values,
             backgroundColor: backgroundColors,
-            borderColor: backgroundColors.map(color => color.replace('1)', '0.8)')),
+            borderColor: backgroundColors.map(color => color.replace("1)", "0.8)")),
             borderWidth: 1,
           },
         ],
+      });
+    } else {
+      setChartData({
+        labels: [],
+        datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 1 }],
       });
     }
   }, [data]);
@@ -71,11 +86,12 @@ export default function PieChart({ data, height = 300 }: PieChartProps) {
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function(context: TooltipItem<'pie'>) {
             const label = context.label || '';
-            const value = context.raw || 0;
-            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-            const percentage = Math.round((value / total) * 100);
+            const value = typeof context.raw === 'number' ? context.raw : 0;
+            const datasetData = (context.dataset.data || []) as number[];
+            const total = datasetData.reduce((a: number, b: number) => a + b, 0);
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
             return `${label}: ${value} (${percentage}%)`;
           }
         }
@@ -85,7 +101,13 @@ export default function PieChart({ data, height = 300 }: PieChartProps) {
 
   return (
     <div style={{ height: `${height}px` }}>
-      <Pie data={chartData} options={options} />
+      {chartData.labels.length > 0 ? (
+        <Pie data={chartData} options={options} />
+      ) : (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          No data to display
+        </div>
+      )}
     </div>
   );
 }

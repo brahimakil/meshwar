@@ -9,7 +9,6 @@ import {
   MapPin, 
   User, 
   Mail, 
-  Phone, 
   Clock,
   Loader2
 } from "lucide-react";

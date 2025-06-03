@@ -36,43 +36,35 @@ function MapMarker({ position, setPosition }: {
 }
 
 export default function LocationPicker({ 
-  initialLat = 25.276987,  // Default to center of Saudi Arabia
-  initialLng = 45.086601,
+  initialLat, 
+  initialLng,
   onLocationSelect 
 }: LocationPickerProps) {
-  // Ensure we have valid numbers for the initial position
-  const safeInitialLat = typeof initialLat === 'number' && !isNaN(initialLat) ? initialLat : 
-                        typeof initialLat === 'string' && !isNaN(parseFloat(initialLat)) ? parseFloat(initialLat) : 
-                        25.276987;
-                        
-  const safeInitialLng = typeof initialLng === 'number' && !isNaN(initialLng) ? initialLng : 
-                        typeof initialLng === 'string' && !isNaN(parseFloat(initialLng)) ? parseFloat(initialLng) : 
-                        45.086601;
+  const defaultLat = 25.276987;
+  const defaultLng = 45.086601;
+
+  const getSafeCoord = (coord: number | string | undefined, defaultVal: number): number => {
+    if (typeof coord === 'number' && !isNaN(coord)) return coord;
+    if (typeof coord === 'string' && !isNaN(parseFloat(coord))) return parseFloat(coord);
+    return defaultVal;
+  };
+  
+  const safeInitialLat = getSafeCoord(initialLat, defaultLat);
+  const safeInitialLng = getSafeCoord(initialLng, defaultLng);
   
   const [position, setPosition] = useState<[number, number]>([safeInitialLat, safeInitialLng]);
-  const [mapKey, setMapKey] = useState(Date.now()); // Used to force re-render when needed
+  const [mapKey, setMapKey] = useState(Date.now()); 
   
-  // Fix: Remove the dependency on position in this effect to prevent infinite loop
   useEffect(() => {
-    // Only update if we have valid coordinates that are different from current position
-    if (initialLat !== undefined && initialLng !== undefined) {
-      const lat = typeof initialLat === 'number' && !isNaN(initialLat) ? initialLat : 
-                typeof initialLat === 'string' && !isNaN(parseFloat(initialLat)) ? parseFloat(initialLat) : 
-                safeInitialLat;
-                
-      const lng = typeof initialLng === 'number' && !isNaN(initialLng) ? initialLng : 
-                typeof initialLng === 'string' && !isNaN(parseFloat(initialLng)) ? parseFloat(initialLng) : 
-                safeInitialLng;
-      
-      // Only update if the coordinates are different from initial values
-      if (Math.abs(lat - position[0]) > 0.000001 || Math.abs(lng - position[1]) > 0.000001) {
-        setPosition([lat, lng]);
-        setMapKey(Date.now()); // Force map re-render with new position
-      }
+    if (Math.abs(safeInitialLat - position[0]) > 0.000001 || Math.abs(safeInitialLng - position[1]) > 0.000001) {
+      setPosition([safeInitialLat, safeInitialLng]);
     }
-  }, [initialLat, initialLng]); // Remove position from dependencies
-  
-  // Update parent component when position changes
+  }, [position, safeInitialLat, safeInitialLng]);
+
+  useEffect(() => {
+    setMapKey(Date.now());
+  }, [safeInitialLat, safeInitialLng]);
+
   const handlePositionChange = (newPosition: [number, number]) => {
     setPosition(newPosition);
     onLocationSelect(newPosition[0], newPosition[1]);
@@ -81,7 +73,7 @@ export default function LocationPicker({
   return (
     <div className="h-[400px] w-full rounded-md overflow-hidden border">
       <MapContainer 
-        key={mapKey}
+        key={mapKey} 
         center={position} 
         zoom={13} 
         style={{ height: "100%", width: "100%" }}

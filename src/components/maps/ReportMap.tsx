@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { Icon, LatLngExpression, LatLngBounds, latLngBounds } from "leaflet";
+import { Icon, LatLngExpression, LatLngBounds } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Location } from "@/types/location";
 import { Activity } from "@/types/activity";
@@ -34,10 +34,10 @@ function MapBoundsFitter({ locations }: { locations: Location[] }) {
   useEffect(() => {
     if (locations.length === 0) return;
     
-    const bounds = new LatLngBounds([0, 0]);
+    const bounds = new LatLngBounds([]);
     
     locations.forEach(location => {
-      if (location.coordinates && location.coordinates.lat && location.coordinates.lng) {
+      if (location.coordinates && typeof location.coordinates.lat === 'number' && typeof location.coordinates.lng === 'number') {
         bounds.extend([location.coordinates.lat, location.coordinates.lng]);
       }
     });
@@ -75,7 +75,6 @@ export default function ReportMap({ locations, activities }: ReportMapProps) {
   
   // Create custom icon for each location
   const createLocationIcon = (location: Location) => {
-    // Use the location's icon if available
     if (location.icon) {
       return new Icon({
         iconUrl: location.icon,
@@ -85,7 +84,6 @@ export default function ReportMap({ locations, activities }: ReportMapProps) {
       });
     }
     
-    // Or use category-based color
     const categoryColors: Record<string, string> = {
       park: 'green',
       museum: 'orange',
@@ -95,13 +93,12 @@ export default function ReportMap({ locations, activities }: ReportMapProps) {
       mountain: 'purple',
       historic: 'brown',
     };
-    
     let color = 'blue'; // Default color
     
-    if (location.category && typeof location.category === 'string') {
-      const lowerCaseCategory = location.category.toLowerCase();
-      if (categoryColors[lowerCaseCategory]) {
-        color = categoryColors[lowerCaseCategory];
+    if (location.category && location.category.name && typeof location.category.name === 'string') {
+      const lowerCaseCategoryName = location.category.name.toLowerCase();
+      if (categoryColors[lowerCaseCategoryName]) {
+        color = categoryColors[lowerCaseCategoryName];
       }
     }
     

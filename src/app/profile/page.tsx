@@ -2,6 +2,7 @@
 
 import { useState, useEffect, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import MainLayout from "@/layouts/MainLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { userService } from "@/services/userService";
@@ -71,28 +72,29 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
     if (!currentUser) return;
-    
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    // Ensure profileImage is string | undefined
+    const imageToUpdate = profileImage === null ? undefined : profileImage;
+
     try {
-      setSaving(true);
-      setError(null);
-      setSuccess(null);
-      
-      // Update user data in Firestore
       await userService.updateUser(currentUser.uid, {
         displayName,
-        profileImage
+        profileImage: imageToUpdate
       });
-      
+
       setSuccess("Profile updated successfully!");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error updating profile:", err);
-      setError("Failed to update profile. Please try again.");
+      setError(err.message || "Failed to update profile.");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
@@ -134,10 +136,12 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6">
               <div className="relative h-24 w-24">
                 {previewImage ? (
-                  <img
+                  <Image
                     src={previewImage}
                     alt="Profile"
-                    className="h-24 w-24 rounded-full object-cover border"
+                    width={96}
+                    height={96}
+                    className="rounded-full object-cover border"
                   />
                 ) : (
                   <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">

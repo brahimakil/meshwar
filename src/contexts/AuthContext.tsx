@@ -82,55 +82,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (authUser) {
         try {
-          // Get user document from Firestore
-          const userDoc = await getDoc(doc(db, "users", authUser.uid));
+          const userDocRef = doc(db, "users", authUser.uid);
+          const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
-            const userData = userDoc.data();
+            const firestoreUserData = userDoc.data();
             
-            // Store user data including role in state
             setUserData({
               uid: authUser.uid,
-              email: authUser.email,
-              displayName: userData.displayName || authUser.displayName,
-              role: userData.role || "user", // Default to "user" if role is not specified
-              ...userData
+              email: firestoreUserData.email || authUser.email,
+              displayName: firestoreUserData.displayName || authUser.displayName,
+              role: firestoreUserData.role || "user",
+              createdAt: firestoreUserData.createdAt,
             });
             
-            // Store role in localStorage for persistence
-            localStorage.setItem("userRole", userData.role || "user");
-            
-            // Set the current user
+            localStorage.setItem("userRole", firestoreUserData.role || "user");
             setCurrentUser(authUser);
           } else {
-            // If user document doesn't exist in Firestore, create one
-            // But don't sign out the user
-            await setDoc(doc(db, "users", authUser.uid), {
+            // User exists in Auth but not in Firestore, create document
+            const newUserFirestoreData = {
               email: authUser.email,
               displayName: authUser.displayName,
-              role: "user", // Default role
-              createdAt: serverTimestamp()
-            });
+              role: "user" as UserRole, // Default role, ensure type
+              createdAt: serverTimestamp() // Use serverTimestamp when creating
+            };
+            await setDoc(doc(db, "users", authUser.uid), newUserFirestoreData);
             
             setUserData({
               uid: authUser.uid,
               email: authUser.email,
               displayName: authUser.displayName,
-              role: "user"
+              role: "user" as UserRole,
+              createdAt: new Date() // For local state, use current date after creation
             });
             
             localStorage.setItem("userRole", "user");
             setCurrentUser(authUser);
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);
-          // Still set basic user info even if there's an error
-          // Don't sign out the user
+          console.error("Error fetching or creating user data in Firestore:", error);
+          // Fallback if Firestore interaction fails
           setUserData({
             uid: authUser.uid,
             email: authUser.email,
             displayName: authUser.displayName,
-            role: localStorage.getItem("userRole") || "user" // Use cached role or default
+            role: (localStorage.getItem("userRole") as UserRole) || "user",
+            createdAt: authUser.metadata.creationTime ? new Date(authUser.metadata.creationTime) : new Date() 
           });
           setCurrentUser(authUser);
         }

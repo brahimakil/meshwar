@@ -5,13 +5,14 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Location } from '@/types/location';
+import L from 'leaflet';
 
 // Fix Leaflet icon issue in Next.js
-const fixLeafletIcons = () => {
+function fixLeafletIcons() {
   // Only run on client-side
   if (typeof window !== 'undefined') {
     // Delete the default icon
-    delete L.Icon.Default.prototype._getIconUrl;
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
     
     // Set default icon paths
     L.Icon.Default.mergeOptions({

@@ -4,15 +4,13 @@ import { Users, MapPin, CalendarCheck } from 'lucide-react';
 interface ActivityItemProps {
   id: string;
   type: 'user' | 'activity' | 'location';
-  title: string;
   description: string;
   createdAt: Date;
 }
 
 export default function ActivityItem({
-  id,
+  id: _id,
   type,
-  title,
   description,
   createdAt
 }: ActivityItemProps) {
@@ -29,7 +27,7 @@ export default function ActivityItem({
     }
   };
 
-  const getTitle = () => {
+  const getTitleText = () => {
     switch (type) {
       case 'user':
         return 'New user registered';
@@ -48,7 +46,7 @@ export default function ActivityItem({
         {getIcon()}
       </div>
       <div>
-        <p className="text-sm font-medium">{getTitle()}</p>
+        <p className="text-sm font-medium">{getTitleText()}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
         <p className="text-xs text-muted-foreground mt-1">
           {formatDistanceToNow(createdAt, { addSuffix: true })}

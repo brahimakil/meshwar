@@ -1,20 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { 
-  Download, 
-  FileText, 
   Users, 
   Calendar, 
   BarChart3, 
-  Filter, 
-  Search,
-  ChevronRight,
-  PieChart,
-  TrendingUp,
-  Map,
-  Clock,
   AlertCircle
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
@@ -28,7 +18,6 @@ type ReportType = "user" | "activity" | "admin";
 export default function ReportsPage() {
   const [selectedReportType, setSelectedReportType] = useState<ReportType | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleSelectReportType = (type: ReportType) => {
     setSelectedReportType(type);

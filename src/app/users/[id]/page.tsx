@@ -100,7 +100,7 @@ export default function EditUserPage() {
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-bold">User not found</h2>
           <p className="text-muted-foreground mt-2">
-            The user you're looking for doesn't exist or has been removed.
+            The user you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={() => router.push("/users")}

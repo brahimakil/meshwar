@@ -27,6 +27,18 @@ import { getAgeGroupLabel } from "@/utils/ageGroupUtils";
 import { locationService } from "@/services/locationService";
 import { Location as LocationType } from "@/types/location";
 
+// Define a type for recent activity items
+interface RecentActivityItem {
+  id: string;
+  type: 'user' | 'activity' | 'location'; // Corrected type to match ActivityItemProps
+  displayName?: string; // For type 'user'
+  email?: string;       // For type 'user'
+  title?: string;       // For type 'activity' or 'location'
+  name?: string;        // Alternative for title, or other uses
+  createdAt: Date;      // Ensuring createdAt is consistently a Date object
+  // Add any other properties that might exist on the item
+}
+
 // Dynamically import the DashboardMap to avoid SSR issues with Leaflet
 const DashboardMap = dynamic(
   () => import("@/components/maps/DashboardMap"),
@@ -38,7 +50,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
   const [locationData, setLocationData] = useState<PieChartData[]>([]);
-  const [recentActivity, setRecentActivity] = useState<Record<string, unknown>[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [locations, setLocations] = useState<LocationType[]>([]);
 
@@ -48,8 +60,7 @@ export default function DashboardPage() {
       try {
         console.log("Fetching dashboard data for period:", timePeriod);
         
-        // Fetch each piece of data separately to identify which one might be failing
-        let statsData, timeSeriesData, locationData, recentActivityData, locationsData;
+        let statsData, timeSeriesResult, locationPopularityResult, recentActivityResult, locationsResult;
         
         try {
           statsData = await dashboardService.getDashboardStats(timePeriod);
@@ -59,40 +70,43 @@ export default function DashboardPage() {
         }
         
         try {
-          timeSeriesData = await dashboardService.getTimeSeriesData(timePeriod);
-          console.log("Time series data:", timeSeriesData);
+          timeSeriesResult = await dashboardService.getTimeSeriesData(timePeriod);
+          console.log("Time series data:", timeSeriesResult);
         } catch (err) {
           console.error("Error fetching time series:", err);
         }
         
         try {
-          locationData = await dashboardService.getLocationPopularityData();
-          console.log("Location data:", locationData);
+          locationPopularityResult = await dashboardService.getLocationPopularityData();
+          console.log("Location data:", locationPopularityResult);
         } catch (err) {
           console.error("Error fetching location data:", err);
         }
         
         try {
-          recentActivityData = await dashboardService.getRecentActivity(5);
-          console.log("Recent activity data:", recentActivityData);
+          recentActivityResult = await dashboardService.getRecentActivity(5);
+          console.log("Recent activity data:", recentActivityResult);
         } catch (err) {
           console.error("Error fetching recent activity:", err);
         }
         
-        // Fetch all locations for the map
         try {
-          locationsData = await locationService.getLocations();
-          console.log("Locations data:", locationsData);
-          setLocations(locationsData);
+          locationsResult = await locationService.getLocations();
+          console.log("Locations data:", locationsResult);
+          setLocations(locationsResult);
         } catch (err) {
           console.error("Error fetching locations:", err);
         }
         
-        // Set state with the fetched data
         if (statsData) setStats(statsData);
-        if (timeSeriesData) setTimeSeriesData(timeSeriesData);
-        if (locationData) setLocationData(locationData);
-        if (recentActivityData) setRecentActivity(recentActivityData);
+        if (timeSeriesResult) setTimeSeriesData(timeSeriesResult);
+        if (locationPopularityResult) setLocationData(locationPopularityResult);
+        if (recentActivityResult) {
+          setRecentActivity(recentActivityResult.map(item => ({
+            ...item,
+            createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+          })) as RecentActivityItem[]);
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -110,7 +124,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back! Here's an overview of your platform.
+              Welcome back! Here&apos;s an overview of your platform.
             </p>
           </div>
           <TimeRangeSelector value={timePeriod} onChange={setTimePeriod} />
@@ -232,9 +246,7 @@ export default function DashboardPage() {
                       key={item.id}
                       id={item.id}
                       type={item.type}
-                      title={item.type === 'user' ? item.displayName || item.email : item.title || item.name}
-                      description={item.type === 'user' ? 'New user joined' : 
-                                  item.type === 'activity' ? 'New activity created' : 'New location added'}
+                      description={item.type === 'user' ? item.displayName || item.email || 'N/A' : item.title || item.name || 'N/A'}
                       createdAt={item.createdAt}
                     />
                   ))}

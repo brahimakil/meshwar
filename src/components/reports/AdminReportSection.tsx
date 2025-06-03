@@ -11,8 +11,7 @@ import {
   Users,
   Calendar,
   MapPin,
-  Clock,
-  AlertCircle
+  Clock
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { userService } from "@/services/userService";
@@ -235,11 +234,12 @@ export default function AdminReportSection({ setError }: AdminReportSectionProps
     
     // Calculate locations by category
     const locationsByCategory = locations.reduce((acc, location) => {
-      if (location.category && typeof location.category === 'string') {
-        const category = location.category.charAt(0).toUpperCase() + location.category.slice(1);
-        acc[category] = (acc[category] || 0) + 1;
+      if (location.category && location.category.name && typeof location.category.name === 'string') {
+        const categoryName = location.category.name;
+        const formattedCategory = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+        acc[formattedCategory] = (acc[formattedCategory] || 0) + 1;
       } else {
-        // Handle locations without a category or with non-string category
+        // Handle locations without a category or with non-string category name
         acc["Uncategorized"] = (acc["Uncategorized"] || 0) + 1;
       }
       return acc;

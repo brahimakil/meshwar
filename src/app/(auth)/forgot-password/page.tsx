@@ -21,10 +21,14 @@ export default function ForgotPasswordPage() {
       setLoading(true);
       await resetPassword(email);
       setMessage("Check your email for further instructions");
-    } catch (error: any) {
-      setError(
-        error.message || "Failed to reset password. Please try again."
-      );
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(
+          error.message || "Failed to reset password. Please try again."
+        );
+      } else {
+        setError("Failed to reset password. An unknown error occurred.");
+      }
     } finally {
       setLoading(false);
     }

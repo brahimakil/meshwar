@@ -23,9 +23,9 @@ export default function LoginPage() {
       setLoading(true);
       await login(email, password);
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(
-        error.message || "Failed to sign in. Please check your credentials."
+        error instanceof Error ? error.message : "Failed to sign in. Please check your credentials."
       );
     } finally {
       setLoading(false);
@@ -129,7 +129,7 @@ export default function LoginPage() {
           
           <div className="mt-6 text-center text-sm">
             <p>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/signup" className="text-primary hover:underline">
                 Sign up
               </Link>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { User, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { userService } from "@/services/userService";
@@ -59,10 +60,12 @@ export default function Header() {
               {/* User avatar - show profile image if available, otherwise show default icon */}
               <div className="flex h-8 w-8 items-center justify-center rounded-full overflow-hidden bg-primary/10 text-primary">
                 {profileImage ? (
-                  <img 
+                  <Image 
                     src={profileImage} 
                     alt="Profile" 
-                    className="h-full w-full object-cover"
+                    width={32}
+                    height={32}
+                    className="object-cover"
                   />
                 ) : (
                   <User className="h-4 w-4" />

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, AlertCircle, MapPin, Eye, ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertCircle, MapPin } from "lucide-react";
+import Image from "next/image";
 import MainLayout from "@/layouts/MainLayout";
 import { Location } from "@/types/location";
 import { locationService } from "@/services/locationService";
@@ -114,10 +115,11 @@ export default function LocationsPage() {
               <div key={location.id} className="border rounded-lg overflow-hidden bg-card">
                 <div className="relative h-48 overflow-hidden">
                   {location.images && location.images.length > 0 ? (
-                    <img 
-                      src={location.images[0]} 
-                      alt={location.name} 
-                      className="w-full h-full object-cover"
+                    <Image
+                      src={location.images[0]}
+                      alt={location.name}
+                      layout="fill"
+                      objectFit="cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">

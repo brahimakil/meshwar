@@ -89,7 +89,7 @@ export default function EditCategoryPage() {
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-bold">Category not found</h2>
           <p className="text-muted-foreground mt-2">
-            The category you're looking for doesn't exist or has been removed.
+            The category you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={() => router.push("/categories")}

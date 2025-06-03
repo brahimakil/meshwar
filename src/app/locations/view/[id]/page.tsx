@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, MapPin, Calendar, Edit, Trash2, AlertCircle, ImageIcon } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
 import { locationService } from "@/services/locationService";
@@ -77,7 +78,7 @@ export default function ViewLocationPage() {
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-bold">Location not found</h2>
           <p className="text-muted-foreground mt-2">
-            The location you're looking for doesn't exist or has been removed.
+            The location you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={() => router.push("/locations")}
@@ -103,10 +104,12 @@ export default function ViewLocationPage() {
             </button>
             <div className="flex items-center gap-3">
               {location?.icon ? (
-                <img 
+                <Image 
                   src={location.icon} 
                   alt={`${location.name} icon`} 
-                  className="h-10 w-10 rounded-md object-cover"
+                  width={40}
+                  height={40}
+                  className="rounded-md object-cover"
                 />
               ) : (
                 <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
@@ -157,10 +160,11 @@ export default function ViewLocationPage() {
             {location?.images && location.images.length > 0 ? (
               <div className="space-y-4">
                 <div className="relative h-80 rounded-lg overflow-hidden border">
-                  <img 
+                  <Image 
                     src={location.images[currentImageIndex]} 
                     alt={`${location.name} - Image ${currentImageIndex + 1}`}
-                    className="w-full h-full object-cover"
+                    layout="fill"
+                    objectFit="cover"
                   />
                 </div>
                 
@@ -174,10 +178,12 @@ export default function ViewLocationPage() {
                           index === currentImageIndex ? "border-primary" : "border-transparent"
                         }`}
                       >
-                        <img
+                        <Image
                           src={image}
                           alt={`Thumbnail ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          width={64}
+                          height={64}
+                          className="object-cover"
                         />
                       </button>
                     ))}

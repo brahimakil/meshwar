@@ -30,9 +30,9 @@ export default function SignupPage() {
       // Always set role as "admin" since this is an admin interface
       await signup(email, password, name, "admin");
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(
-        error.message || "Failed to create an account. Please try again."
+        error instanceof Error ? error.message : "Failed to create an account. Please try again."
       );
     } finally {
       setLoading(false);

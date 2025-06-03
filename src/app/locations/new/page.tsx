@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Loader2, MapPin, X, Plus, Map, ImageIcon } from "lucide-react";
+import { Save, ArrowLeft, Loader2, X, Plus, Map, ImageIcon } from "lucide-react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import MainLayout from "@/layouts/MainLayout";
 import { locationService } from "@/services/locationService";
 import { categoryService } from "@/services/categoryService";
@@ -195,9 +196,11 @@ export default function NewLocationPage() {
               <div className="flex items-center gap-4">
                 {icon ? (
                   <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                    <img 
-                      src={icon} 
-                      alt="Location icon" 
+                    <Image
+                      src={icon}
+                      alt="Location icon"
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover"
                     />
                     <button
@@ -331,9 +334,11 @@ export default function NewLocationPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {images.map((image, index) => (
                     <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
-                      <img 
-                        src={image} 
-                        alt={`Location image ${index + 1}`} 
+                      <Image
+                        src={image}
+                        alt={`Location image ${index + 1}`}
+                        width={100}
+                        height={100}
                         className="w-full h-full object-cover"
                       />
                       <button

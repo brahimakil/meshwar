@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Save, ArrowLeft, Loader2, AlertCircle, MapPin, X, Plus, Map, ImageIcon } from "lucide-react";
+import { Save, ArrowLeft, Loader2, AlertCircle, X, Plus, Map, ImageIcon } from "lucide-react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import MainLayout from "@/layouts/MainLayout";
 import { locationService } from "@/services/locationService";
 import { categoryService } from "@/services/categoryService";
@@ -181,7 +182,7 @@ export default function EditLocationPage() {
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-bold">Location not found</h2>
           <p className="text-muted-foreground mt-2">
-            The location you're looking for doesn't exist or has been removed.
+            The location you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={() => router.push("/locations")}
@@ -249,10 +250,12 @@ export default function EditLocationPage() {
               <div className="flex items-center gap-4">
                 {icon ? (
                   <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                    <img 
+                    <Image
                       src={icon} 
                       alt="Location icon" 
-                      className="w-full h-full object-cover"
+                      width={64}
+                      height={64}
+                      className="object-cover"
                     />
                     <button
                       type="button"
@@ -385,10 +388,12 @@ export default function EditLocationPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {images.map((image, index) => (
                     <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
-                      <img 
+                      <Image
                         src={image} 
                         alt={`Location image ${index + 1}`} 
-                        className="w-full h-full object-cover"
+                        width={100}
+                        height={100}
+                        className="object-cover"
                       />
                       <button
                         type="button"

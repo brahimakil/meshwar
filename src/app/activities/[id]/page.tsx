@@ -16,6 +16,10 @@ const ActivityMap = dynamic(
   { ssr: false }
 );
 
+// It's good practice to define these types at the top of the file or in a shared types file
+// type DifficultyLevel = "easy" | "moderate" | "hard";
+// type AgeGroupValue = "all" | "adults" | "children" | "seniors";
+
 export default function EditActivityPage() {
   const [activity, setActivity] = useState<Activity | null>(null);
   const [title, setTitle] = useState("");
@@ -459,7 +463,7 @@ export default function EditActivityPage() {
                 <select
                   id="difficulty"
                   value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value as any)}
+                  onChange={(e) => setDifficulty(e.target.value as "easy" | "moderate" | "hard")}
                   className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="easy">Easy</option>
@@ -475,7 +479,7 @@ export default function EditActivityPage() {
                 <select
                   id="ageGroup"
                   value={ageGroup}
-                  onChange={(e) => setAgeGroup(e.target.value as any)}
+                  onChange={(e) => setAgeGroup(e.target.value as "all" | "adults" | "children" | "seniors")}
                   className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="all">All Ages</option>
@@ -572,7 +576,7 @@ export default function EditActivityPage() {
                 <span>Active</span>
               </label>
               <p className="text-xs text-muted-foreground mt-1">
-                Inactive activities won't be visible to users
+                Inactive activities won&apos;t be visible to users
               </p>
             </div>
 
