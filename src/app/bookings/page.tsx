@@ -54,11 +54,41 @@ export default function BookingsPage() {
       setLoading(true);
       setError(null);
       
+      console.debug("[BookingsPage] Loading data...");
+      
       const [activitiesData, usersData, bookingsData] = await Promise.all([
         activityService.getActivities(),
         userService.getUsers(),
         bookingService.getBookings()
       ]);
+      
+      // Debug: Log first item of each dataset
+      if (activitiesData.length > 0) {
+        console.debug("[BookingsPage] First activity:", {
+          id: activitiesData[0].id,
+          startDate: activitiesData[0].startDate,
+          endDate: activitiesData[0].endDate,
+          createdAt: activitiesData[0].createdAt,
+          updatedAt: activitiesData[0].updatedAt
+        });
+      }
+      
+      if (usersData.length > 0) {
+        console.debug("[BookingsPage] First user:", {
+          id: usersData[0].id,
+          dob: usersData[0].dob,
+          createdAt: usersData[0].createdAt,
+          updatedAt: usersData[0].updatedAt
+        });
+      }
+      
+      if (bookingsData.length > 0) {
+        console.debug("[BookingsPage] First booking:", {
+          id: bookingsData[0].id,
+          createdAt: bookingsData[0].createdAt,
+          updatedAt: bookingsData[0].updatedAt
+        });
+      }
       
       const activeActivities = activitiesData.filter(
         activity => !activity.isExpired && activity.isActive
@@ -82,8 +112,8 @@ export default function BookingsPage() {
         setBookings([]);
       }
     } catch (err) {
-      console.error("Error loading data:", err);
-      setError("Failed to load data. Please try again.");
+      console.error("[BookingsPage] Error loading data:", err);
+      setError(`Failed to load data: ${err.message}. See console for details.`);
     } finally {
       setLoading(false);
     }

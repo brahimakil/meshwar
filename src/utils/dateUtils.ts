@@ -21,4 +21,31 @@ export function isDateInPast(date: Date | string): boolean {
   compareDate.setHours(0, 0, 0, 0);
   
   return compareDate < today;
+}
+
+export function safeToDate(t: any): Date | null {
+  if (!t) return null;
+  
+  // Handle Firestore Timestamp
+  if (t && typeof t.toDate === 'function') {
+    return t.toDate();
+  }
+  
+  // Handle JavaScript Date objects
+  if (t instanceof Date) {
+    return t;
+  }
+  
+  // Handle numeric timestamps
+  if (typeof t === 'number') {
+    return new Date(t);
+  }
+  
+  // Handle ISO strings
+  if (typeof t === 'string') {
+    return new Date(t);
+  }
+  
+  console.warn('Unsupported date format:', t);
+  return null;
 } 

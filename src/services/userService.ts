@@ -21,6 +21,7 @@ import {
 import { db } from "@/lib/firebase";
 import { User, UserRole } from "@/types/user";
 import { initializeApp } from "firebase/app";
+import { safeToDate } from "@/utils/dateUtils";
 
 const usersCollection = collection(db, "users");
 const auth = getAuth();
@@ -28,35 +29,63 @@ const auth = getAuth();
 export const userService = {
   // Get all users
   async getUsers(): Promise<User[]> {
-    const q = query(usersCollection, orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
-    
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      dob: doc.data().dob?.toDate() || null,
-    } as User));
+    try {
+      const q = query(usersCollection, orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      
+      const users = snapshot.docs.map(docSnap => {
+        const data = docSnap.data();
+        
+        // Debug: Log raw date values
+        console.debug(`[UserService] Raw dates for ${docSnap.id}:`, {
+          dob: data.dob,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt
+        });
+        
+        return {
+          id: docSnap.id,
+          email: data.email ?? '',
+          displayName: data.displayName ?? '',
+          role: data.role ?? 'user',
+          dob: safeToDate(data.dob),
+          profileImage: data.profileImage ?? '',
+          createdAt: safeToDate(data.createdAt),
+          updatedAt: safeToDate(data.updatedAt),
+        } as User;
+      });
+      return users;
+    } catch (error) {
+      console.error("[UserService] Error in getUsers:", error);
+      throw new Error("Failed to fetch users. See console for details.");
+    }
   },
   
   // Get a single user by ID
   async getUserById(id: string): Promise<User | null> {
-    const docRef = doc(usersCollection, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) {
+    try {
+      const docRef = doc(usersCollection, id);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        return null;
+      }
+      
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        email: data.email || '',
+        displayName: data.displayName || '',
+        role: data.role || 'user',
+        dob: data.dob ? safeToDate(data.dob) : null,
+        profileImage: data.profileImage || '',
+        createdAt: safeToDate(data.createdAt),
+        updatedAt: safeToDate(data.updatedAt),
+      } as User;
+    } catch (error) {
+      console.error("Error in getUserById:", error);
       return null;
     }
-    
-    const data = docSnap.data();
-    return {
-      id: docSnap.id,
-      ...data,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
-      dob: data.dob?.toDate() || null,
-    } as User;
   },
   
   // Create a new user
@@ -111,7 +140,8 @@ export const userService = {
         displayName,
         role,
         dob: Timestamp.fromDate(new Date(dob)),
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       };
       
       await setDoc(doc(db, "users", userId), userData);
@@ -125,29 +155,39 @@ export const userService = {
   
   // Update a user
   async updateUser(id: string, userData: Partial<User>): Promise<void> {
-    const docRef = doc(usersCollection, id);
-    
-    // Convert dates to Firestore timestamps if they exist in the update data
-    const updateData: any = { ...userData, updatedAt: serverTimestamp() };
-    
-    if (userData.dob) {
-      updateData.dob = Timestamp.fromDate(new Date(userData.dob));
+    try {
+      const docRef = doc(usersCollection, id);
+      
+      // Convert dates to Firestore timestamps if they exist in the update data
+      const updateData: any = { ...userData, updatedAt: serverTimestamp() };
+      
+      if (userData.dob) {
+        updateData.dob = Timestamp.fromDate(new Date(userData.dob));
+      }
+      
+      // Handle profile image update
+      if (userData.profileImage) {
+        updateData.profileImage = userData.profileImage;
+      }
+      
+      await updateDoc(docRef, updateData);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
     }
-    
-    // Handle profile image update
-    if (userData.profileImage) {
-      updateData.profileImage = userData.profileImage;
-    }
-    
-    await updateDoc(docRef, updateData);
   },
   
   // Delete a user
   async deleteUser(id: string): Promise<void> {
-    const docRef = doc(usersCollection, id);
-    await deleteDoc(docRef);
-    // Note: This only deletes the Firestore document
-    // To fully delete the user, you would also need to delete the Auth user
+    try {
+      const docRef = doc(usersCollection, id);
+      await deleteDoc(docRef);
+      // Note: This only deletes the Firestore document
+      // To fully delete the user, you would also need to delete the Auth user
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw error;
+    }
   },
   
   // Calculate age from date of birth

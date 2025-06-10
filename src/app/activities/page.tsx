@@ -18,6 +18,17 @@ export default function ActivitiesPage() {
     loadActivities();
   }, []);
 
+  useEffect(() => {
+    console.log("[TEST] Testing activityService directly");
+    activityService.getActivities()
+      .then(activities => {
+        console.log("[SUCCESS] Activities loaded:", activities.length);
+      })
+      .catch(error => {
+        console.error("[FAILED] Activity loading failed:", error);
+      });
+  }, []);
+
   async function loadActivities() {
     try {
       setLoading(true);

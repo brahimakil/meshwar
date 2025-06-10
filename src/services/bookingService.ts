@@ -20,91 +20,223 @@ import { activityService } from "./activityService";
 
 const bookingsCollection = collection(db, "bookings");
 
+// Helper function to safely convert Firestore timestamp to Date
+function safeToDate(timestamp: any): Date {
+  if (!timestamp) return new Date();
+  if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  return new Date(timestamp);
+}
+
 export const bookingService = {
   // Get all bookings
   async getBookings(): Promise<Booking[]> {
-    const q = query(bookingsCollection, orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
-    
-    const bookings = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    } as Booking));
-    
-    return bookings;
+    try {
+      console.log("[DEBUG] Starting bookingService.getBookings");
+      const q = query(bookingsCollection, orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      console.log(`[DEBUG] Retrieved ${snapshot.docs.length} bookings`);
+      
+      const bookings: Booking[] = [];
+      
+      for (const docSnap of snapshot.docs) {
+        try {
+          console.log(`[DEBUG] Processing booking document: ${docSnap.id}`);
+          
+          // Enhanced validation for document snapshot
+          if (!docSnap.exists()) {
+            console.warn(`[WARNING] Booking document ${docSnap.id} does not exist`);
+            continue;
+          }
+          
+          const data = docSnap.data();
+          if (!data) {
+            console.warn(`[WARNING] No data for booking document ${docSnap.id}`);
+            continue;
+          }
+          
+          console.log(`[DEBUG] Raw booking data for ${docSnap.id}:`, data);
+          
+          const booking: Booking = {
+            id: docSnap.id,
+            userId: data.userId || '',
+            activityId: data.activityId || '',
+            status: data.status || 'pending',
+            createdAt: safeToDate(data.createdAt),
+            updatedAt: safeToDate(data.updatedAt),
+          };
+          
+          console.log(`[DEBUG] Converted booking ${docSnap.id}:`, booking);
+          bookings.push(booking);
+        } catch (docError) {
+          console.error(`[ERROR] Error processing booking document ${docSnap.id}:`, docError);
+        }
+      }
+      
+      console.log(`[DEBUG] Successfully processed ${bookings.length} bookings`);
+      return bookings;
+    } catch (error) {
+      console.error("[CRITICAL] Error in getBookings:", error);
+      throw new Error(`Failed to fetch bookings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   },
   
   // Get bookings by activity ID
   async getBookingsByActivity(activityId: string): Promise<Booking[]> {
-    const q = query(
-      bookingsCollection, 
-      where("activityId", "==", activityId),
-      orderBy("createdAt", "desc")
-    );
-    const snapshot = await getDocs(q);
-    
-    const bookings = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    } as Booking));
-    
-    // Fetch user details for each booking
-    for (let booking of bookings) {
-      booking.userObject = await userService.getUserById(booking.userId);
+    try {
+      console.log(`[DEBUG] Getting bookings for activity: ${activityId}`);
+      const q = query(
+        bookingsCollection, 
+        where("activityId", "==", activityId),
+        orderBy("createdAt", "desc")
+      );
+      const snapshot = await getDocs(q);
+      console.log(`[DEBUG] Found ${snapshot.docs.length} bookings for activity ${activityId}`);
+      
+      const bookings: Booking[] = [];
+      
+      for (const docSnap of snapshot.docs) {
+        try {
+          if (!docSnap.exists()) {
+            console.warn(`[WARNING] Booking document ${docSnap.id} does not exist`);
+            continue;
+          }
+          
+          const data = docSnap.data();
+          if (!data) {
+            console.warn(`[WARNING] No data for booking document ${docSnap.id}`);
+            continue;
+          }
+          
+          const booking: Booking = {
+            id: docSnap.id,
+            userId: data.userId || '',
+            activityId: data.activityId || '',
+            status: data.status || 'pending',
+            createdAt: safeToDate(data.createdAt),
+            updatedAt: safeToDate(data.updatedAt),
+          };
+          
+          // Fetch user details for each booking
+          try {
+            booking.userObject = await userService.getUserById(booking.userId);
+          } catch (error) {
+            console.error(`Error fetching user for booking ${booking.id}:`, error);
+            booking.userObject = null;
+          }
+          
+          bookings.push(booking);
+        } catch (docError) {
+          console.error(`[ERROR] Error processing booking document ${docSnap.id}:`, docError);
+        }
+      }
+      
+      return bookings;
+    } catch (error) {
+      console.error(`[ERROR] Error in getBookingsByActivity for ${activityId}:`, error);
+      throw new Error(`Failed to fetch bookings for activity: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    return bookings;
   },
   
   // Get bookings by user ID
   async getBookingsByUser(userId: string): Promise<Booking[]> {
-    const q = query(
-      bookingsCollection, 
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc")
-    );
-    const snapshot = await getDocs(q);
-    
-    const bookings = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    } as Booking));
-    
-    // Fetch activity details for each booking
-    for (let booking of bookings) {
-      booking.activityObject = await activityService.getActivityById(booking.activityId);
+    try {
+      const q = query(
+        bookingsCollection, 
+        where("userId", "==", userId),
+        orderBy("createdAt", "desc")
+      );
+      const snapshot = await getDocs(q);
+      
+      const bookings: Booking[] = [];
+      
+      for (const docSnap of snapshot.docs) {
+        try {
+          if (!docSnap.exists()) {
+            console.warn(`[WARNING] Booking document ${docSnap.id} does not exist`);
+            continue;
+          }
+          
+          const data = docSnap.data();
+          if (!data) {
+            console.warn(`[WARNING] No data for booking document ${docSnap.id}`);
+            continue;
+          }
+          
+          const booking: Booking = {
+            id: docSnap.id,
+            userId: data.userId || '',
+            activityId: data.activityId || '',
+            status: data.status || 'pending',
+            createdAt: safeToDate(data.createdAt),
+            updatedAt: safeToDate(data.updatedAt),
+          };
+          
+          // Fetch activity details for each booking
+          try {
+            booking.activityObject = await activityService.getActivityById(booking.activityId);
+          } catch (error) {
+            console.error(`Error fetching activity for booking ${booking.id}:`, error);
+            booking.activityObject = null;
+          }
+          
+          bookings.push(booking);
+        } catch (docError) {
+          console.error(`[ERROR] Error processing booking document ${docSnap.id}:`, docError);
+        }
+      }
+      
+      return bookings;
+    } catch (error) {
+      console.error(`[ERROR] Error in getBookingsByUser for ${userId}:`, error);
+      throw new Error(`Failed to fetch bookings for user: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    return bookings;
   },
   
   // Get a booking by ID
   async getBookingById(id: string): Promise<Booking | null> {
-    const docRef = doc(bookingsCollection, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) {
-      return null;
+    try {
+      console.log(`[DEBUG] Getting booking by ID: ${id}`);
+      const docRef = doc(bookingsCollection, id);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap || !docSnap.exists()) {
+        console.warn(`[WARNING] Booking document ${id} does not exist`);
+        return null;
+      }
+      
+      const data = docSnap.data();
+      if (!data) {
+        console.warn(`[WARNING] No data for booking document ${id}`);
+        return null;
+      }
+      
+      const booking: Booking = {
+        id: docSnap.id,
+        userId: data.userId || '',
+        activityId: data.activityId || '',
+        status: data.status || 'pending',
+        createdAt: safeToDate(data.createdAt),
+        updatedAt: safeToDate(data.updatedAt),
+      };
+      
+      // Fetch related objects
+      try {
+        booking.userObject = await userService.getUserById(booking.userId);
+        booking.activityObject = await activityService.getActivityById(booking.activityId);
+      } catch (error) {
+        console.error(`Error fetching related objects for booking ${id}:`, error);
+      }
+      
+      return booking;
+    } catch (error) {
+      console.error(`[ERROR] Error in getBookingById for ${id}:`, error);
+      throw new Error(`Failed to fetch booking: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    const booking = {
-      id: docSnap.id,
-      ...docSnap.data(),
-      createdAt: docSnap.data().createdAt?.toDate() || new Date(),
-      updatedAt: docSnap.data().updatedAt?.toDate() || new Date(),
-    } as Booking;
-    
-    // Fetch related objects
-    booking.userObject = await userService.getUserById(booking.userId);
-    booking.activityObject = await activityService.getActivityById(booking.activityId);
-    
-    return booking;
   },
   
   // Create a new booking
