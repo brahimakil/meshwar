@@ -14,24 +14,31 @@ export default function RouteGuard({ children }: RouteGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
+    console.log("RouteGuard - pathname:", pathname);
+    console.log("RouteGuard - currentUser:", !!currentUser);
+    console.log("RouteGuard - loading:", loading);
+    
     if (loading) return;
 
-    // Public routes that don't require authentication
-    const publicRoutes = ['/login', '/signup', '/forgot-password'];
+    // Public routes that don't require authentication (with and without trailing slashes)
+    const publicRoutes = ['/login', '/login/', '/signup', '/signup/', '/forgot-password', '/forgot-password/'];
     
     // Check if the current route is a public route
     const isPublicRoute = publicRoutes.includes(pathname);
+    
+    console.log("RouteGuard - isPublicRoute:", isPublicRoute);
 
     if (!currentUser && !isPublicRoute) {
-      // Redirect to login if user is not authenticated and trying to access a protected route
+      console.log("RouteGuard - Redirecting to login (no user, protected route)");
       router.push('/login');
-    } else if (currentUser && isPublicRoute) {
-      // Redirect to dashboard if user is authenticated and trying to access a public route
+    } else if (currentUser && (pathname === '/login' || pathname === '/login/')) {
+      console.log("RouteGuard - Redirecting to dashboard (user logged in, on login page)");
       router.push('/dashboard');
     }
 
     // For admin-only routes
     if (pathname.startsWith('/admin') && !isAdmin) {
+      console.log("RouteGuard - Redirecting to dashboard (not admin)");
       router.push('/dashboard');
     }
 
