@@ -50,63 +50,26 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
   const [locationData, setLocationData] = useState<PieChartData[]>([]);
-  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [locations, setLocations] = useState<LocationType[]>([]);
 
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
       try {
-        console.log("Fetching dashboard data for period:", timePeriod);
+        console.log("Fetching optimized dashboard data for period:", timePeriod);
         
-        let statsData, timeSeriesResult, locationPopularityResult, recentActivityResult, locationsResult;
+        // Single optimized call instead of multiple sequential calls
+        const result = await dashboardService.getDashboardData(timePeriod);
         
-        try {
-          statsData = await dashboardService.getDashboardStats(timePeriod);
-          console.log("Stats data:", statsData);
-        } catch (err) {
-          console.error("Error fetching stats:", err);
-        }
+        setStats(result.stats);
+        setTimeSeriesData(result.timeSeriesData);
+        setLocationData(result.locationData);
+        setRecentActivity(result.recentActivity);
+        setLocations(result.locations);
         
-        try {
-          timeSeriesResult = await dashboardService.getTimeSeriesData(timePeriod);
-          console.log("Time series data:", timeSeriesResult);
-        } catch (err) {
-          console.error("Error fetching time series:", err);
-        }
-        
-        try {
-          locationPopularityResult = await dashboardService.getLocationPopularityData();
-          console.log("Location data:", locationPopularityResult);
-        } catch (err) {
-          console.error("Error fetching location data:", err);
-        }
-        
-        try {
-          recentActivityResult = await dashboardService.getRecentActivity(5);
-          console.log("Recent activity data:", recentActivityResult);
-        } catch (err) {
-          console.error("Error fetching recent activity:", err);
-        }
-        
-        try {
-          locationsResult = await locationService.getLocations();
-          console.log("Locations data:", locationsResult);
-          setLocations(locationsResult);
-        } catch (err) {
-          console.error("Error fetching locations:", err);
-        }
-        
-        if (statsData) setStats(statsData);
-        if (timeSeriesResult) setTimeSeriesData(timeSeriesResult);
-        if (locationPopularityResult) setLocationData(locationPopularityResult);
-        if (recentActivityResult) {
-          setRecentActivity(recentActivityResult.map(item => ({
-            ...item,
-            createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
-          })) as RecentActivityItem[]);
-        }
+        console.log("Dashboard data loaded successfully");
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
